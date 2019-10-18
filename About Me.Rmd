@@ -1,0 +1,25 @@
+---
+title: "Final_Project_About_Me"
+author: "Prachi Naik"
+date: "10/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Background
+Violence and intergenerational poverty continue to plague America’s youth underserved youth of color, impacting their academic achievement, socioemotional development, and general well-being. Major urban areas like the City of Chicago present a particularly dire picture of this reality, where an estimated 81% of public school students have experienced at least one Adverse Childhood Experience (ACE) before the age of 18. The more ACEs a child is exposed to, the greater her risk for trauma. The link between the incidence of trauma and the educational opportunity gap is well-researched and documented. Untreated trauma not only impairs students’ ability to succeed academically, but has long-term negative impacts on brain development, emotional well-being, and behavioral stability. It is also a gateway for a host of debilitating mental health disorders in adulthood, with long-term impacts at the community level. The need for school-based mental health services is loud and clear-- but are schools themselves responding to this call for action? This project seeks to explore the availability and effectiveness of models of mental health delivery that are integrated into a variety of school systems. 
+
+Research Questions
+I explore three overarching questions:
+
+1. What are the most effective methods and models to capture student need for services?
+
+2. What schools characteristics are most conducive to providing diagnostic services?
+
+3. Does an expanded menu of diagnostic assessment translate to the greater availability of services?
+
+Creators
+Prachi Naik: Prachi Naik is former middle school educator pursuing a Master's of Public Policy and Master's of Business Administration dual degree at the Harvard Kennedy School and University of Chicago Booth School of Business. She is passionate about creating equitable educational outcomes for students from vulnerable communities. 
