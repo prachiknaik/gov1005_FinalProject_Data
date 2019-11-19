@@ -1,0 +1,56 @@
+---
+title: "milestone6"
+author: "Prachi Naik"
+date: "10/29/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# data from ssocs came in the .sas7bdat format. this library is used to read in the data
+library(sas7bdat)
+library(tidyverse)
+```
+
+```{r cache=TRUE}
+# reading in the sas dataset and assigning it
+#cahe = true makes this not run again and again. wont keep doing it every time I knit
+ssocs_data <- read.sas7bdat("pu_ssocs16.sas7bdat")
+```
+
+
+```{r}
+survey_data <- ssocs_data %>% 
+  select(C0662: C0686, C0306:C0393, C0422:C0424, C0422:C0424, C0526:C0536, C0560:C0562, DISTOT16, INCID16, INCPOL16,
+         OUTSUS16, PROBWK16, REMOVL16, STUOFF16, SVINC16, SVPOL16, TRANSF16, VIOINC16, VIOPOL16, DISRUPT, SEC_FT16,
+         SEC_PT16, FR_URBAN) %>%
+  rename(diag_at_school_employed = C0662, diag_at_school_funded = C0664, diag_outside_school_funded = C0666,
+         treatment_at_school_employed = C0668, treatmeant_at_school_funded = C0670, treatment_outside_school_funded =
+          C0672, inadequate_access_to_mhp = C0674, inadequate_funding = C0676, potential_legal_issues = C0678,
+         lack_of_parental_support = C0680, lack_of_community_support = C0682, payment_policies = C0684,
+         reluctance_to_label_students = C0686, school_deaths_from_homicides = C0306, school_shooting_incidents = C0308,
+         number_of_arrests_at_school = C0688_R, hate_crimes = C0690_R, student_racial_ethnic_tensions = C0374,
+         student_bullying = C0376, student_sexual_harrassment = C0378, student_verbal_abuse_of_teachers = C0380,
+         student_harrassment_sexual_orientation = C0381, disorder_in_classrooms = C0382,
+         student_harrassment_gender_identity = C0383, student_disrespect_towards_teachers_notverbal = C0384,
+         student_gang_activites = C0386, cyberbullying = C0389, cyberbullying_affecting_school_environment = C0391,
+         staff_resources_cyberbullying = C0393, referral_to_school_counselor_available = C0422,
+         referral_to_school_counselor_action_taken = C0424, percent_students_limited_english_proficient = C0526,
+         percent_special_education = C0528, percent_students_below_15th_percentile = C0532,
+         percent_student_likely_to_go_to_college = C0534, percent_students_academic_achievement_important = C0536,
+         crime_where_students_live = C0560, crime_where_school_located = C0562, total_disciplinary_actions = DISTOT16,
+         total_incidents_recorded = INCID16, total_incidents_reported_to_police = INCPOL16, out_of_school_suspensions =
+           OUTSUS16, types_of_problems_per_week = PROBWK16, total_removal_no_school = REMOVL16,
+         total_students_involved_offenses = STUOFF16, total_serious_violent_incidents = SVINC16,
+         total_serious_violent_incidents_reported_to_police = SVPOL16, total_transfers_to_specialized_schools =
+           TRANSF16, total_number_violent_incidents_recorded = VIOINC16,
+         total_number_violent_incidents_recorded_to_police = VIOPOL16, total_number_disruptions = DISRUPT,
+         total_full_time_security_guards = SEC_FT16, total_part_time_security_guards = SEC_PT16, urbanicity = FR_URBAN)        
+  
+
+
+```
+
+
+Use the command write_rds (in this file) and read_rds (in the shiny app) to read and write data to the shiny app. 
