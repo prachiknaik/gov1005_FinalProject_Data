@@ -1,0 +1,132 @@
+---
+title: "milestone6"
+author: "Prachi Naik"
+date: "10/29/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# data from ssocs came in the .sas7bdat format. this library is used to read in the data
+library(sas7bdat)
+library(ggplot2)
+library(grid)
+library(tidyverse)
+```
+
+```{r cache=TRUE}
+# reading in the sas dataset and assigning it
+#cahe = true makes this not run again and again. wont keep doing it every time I knit
+ssocs_data <- read.sas7bdat("pu_ssocs16.sas7bdat")
+```
+
+
+```{r}
+survey_data <- ssocs_data %>% 
+  select(SCHID, C0662: C0686, C0306:C0393, C0422:C0424, C0422:C0424, C0526:C0536, C0560:C0562, DISTOT16, INCID16, INCPOL16,
+         OUTSUS16, PROBWK16, REMOVL16, STUOFF16, SVINC16, SVPOL16, TRANSF16, VIOINC16, VIOPOL16, DISRUPT, SEC_FT16,
+         SEC_PT16, STRATA, FR_URBAN) %>%
+  rename(diag_at_school_employed = C0662, diag_at_school_funded = C0664, diag_outside_school_funded = C0666,
+         treatment_at_school_employed = C0668, treatmeant_at_school_funded = C0670, treatment_outside_school_funded =
+          C0672, inadequate_access_to_mhp = C0674, inadequate_funding = C0676, potential_legal_issues = C0678,
+         lack_of_parental_support = C0680, lack_of_community_support = C0682, payment_policies = C0684,
+         reluctance_to_label_students = C0686, school_deaths_from_homicides = C0306, school_shooting_incidents = C0308,
+         number_of_arrests_at_school = C0688_R, hate_crimes = C0690_R, student_racial_ethnic_tensions = C0374,
+         student_bullying = C0376, student_sexual_harrassment = C0378, student_verbal_abuse_of_teachers = C0380,
+         student_harrassment_sexual_orientation = C0381, disorder_in_classrooms = C0382,
+         student_harrassment_gender_identity = C0383, student_disrespect_towards_teachers_notverbal = C0384,
+         student_gang_activites = C0386, cyberbullying = C0389, cyberbullying_affecting_school_environment = C0391,
+         staff_resources_cyberbullying = C0393, referral_to_school_counselor_available = C0422,
+         referral_to_school_counselor_action_taken = C0424, percent_students_limited_english_proficient = C0526,
+         percent_special_education = C0528, percent_students_below_15th_percentile = C0532,
+         percent_student_likely_to_go_to_college = C0534, percent_students_academic_achievement_important = C0536,
+         crime_where_students_live = C0560, crime_where_school_located = C0562, total_disciplinary_actions = DISTOT16,
+         total_incidents_recorded = INCID16, total_incidents_reported_to_police = INCPOL16, out_of_school_suspensions =
+           OUTSUS16, types_of_problems_per_week = PROBWK16, total_removal_no_school = REMOVL16,
+         total_students_involved_offenses = STUOFF16, total_serious_violent_incidents = SVINC16,
+         total_serious_violent_incidents_reported_to_police = SVPOL16, total_transfers_to_specialized_schools =
+           TRANSF16, total_number_violent_incidents_recorded = VIOINC16,
+         total_number_violent_incidents_recorded_to_police = VIOPOL16, total_number_disruptions = DISRUPT,
+         total_full_time_security_guards = SEC_FT16, total_part_time_security_guards = SEC_PT16, location_density = STRATA,
+         urbanicity = FR_URBAN)        
+
+```
+
+There were `r nrow()` schools that participated in this survey. The schools are situated all over the country, in contexts ranging from rural agrarian communities to bustling urban centers. 
+
+```{r}
+
+#looking at the location_density variable, it appears there is a ton of information contained in the variables there. separate out primary, middle, high school, school population, and city, suburb, town, and rural. 
+school_characteristics <- survey_data %>% 
+  mutate(school_type = ifelse(location_density %in% 111:144, "primary",
+                                     ifelse(location_density %in% 211:244, "middle",
+                                            ifelse(location_density %in% 311:344, "high",
+                                                   ifelse(location_density %in% 412:444, "combined", "test"))))) %>%
+  mutate(school_pop = ifelse(location_density %in% c(111:144, 211:214, 311:314, 412:414), "small",
+                                     ifelse(location_density %in% c(121:124, 221:224, 321:324, 421:424), "medium",
+                                            ifelse(location_density %in% c(131:134, 231:234, 331:334, 431:434), "large",
+                                                   ifelse(location_density %in% c(141:144, 241:244, 341:344, 441:444), "very large", "test"))))) %>%
+  mutate(setting_type = ifelse(location_density %in% c(111,121,131,141,211,221,231,241,311,321,331,341,421,431,441), "city",
+                                     ifelse(location_density %in% c(112,122,132,142,212,222,232,242,312,322,332,342,422,432,442), "suburb",
+                                            ifelse(location_density %in% c(113,123,133,143,213,223,233,243,313,323,333,343,423,433,443), "town",
+                                                   ifelse(location_density %in% c(114,124,134,144,214,224,234,244,314,324,334,344,424,434,444), "rural", "na")))))
+
+#making a basic stacked bar graph to put in the generalized "visualizations" tab
+school_characteristics_vis <- school_characteristics %>% 
+  ggplot(aes(factor(x = school_pop, level = c("small", "medium", "large", "very large")))) + 
+  geom_bar(aes(fill = school_type)) + 
+  labs(title ="Characteristics of Schools Represented in the 2016 School Survey on Crime and Safety", 
+       subtitle = "Small: <300 | Medium: 300-499 | Large: 500-999 | Very Large: 1000+", 
+       caption = "Data from the Nationa; Center on Education Statistics, 2019",
+       x = "School Size",
+       y = "Number of Schools") +
+  scale_fill_discrete(name = "Type of School") +
+  theme(plot.caption = element_text(hjust = 0, face = "italic"))
+
+school_characteristics_vis
+
+# Liz thinks I should do a drop down menu of different questions I can answer with my regressions: 1) diagnostics; 2) providing interventions (focusing on the capacity to do so here); 3) what is this doing to school culture? 
+
+```
+
+Diagnostic Assessments 
+
+```{r}
+
+# Big Questions to Answer
+# Does additional diagnostic --> treatment? 
+# What might be inhibiting treatment? (tons of variables on impediments to mental health services)
+# If treatment is provided, what is its impact on school climate? 
+
+#If a school employee does a diagnostic, does that result in more treatments?
+
+school_diag_outcome <- school_characteristics %>% 
+  select(diag_at_school_employed, diag_at_school_funded, diag_outside_school_funded,
+         treatment_at_school_employed, treatmeant_at_school_funded, treatment_outside_school_funded)
+
+school_diag_outcome[school_diag_outcome == 2] <- 0
+  
+test <- school_diag_outcome %>% 
+  mutate(diag_location = ifelse(diag_at_school_employed %in% 1, "By School Employee",
+                                     ifelse(diag_at_school_funded %in% 1, "By School Contractor",
+                                            ifelse(diag_outside_school_funded %in% 1, "Outside School", "None")))) %>%
+  mutate(treatment_location = ifelse(treatment_at_school_employed %in% 1, "By School Employee",
+                                     ifelse(treatmeant_at_school_funded %in% 1, "By School Contractor",
+                                            ifelse(treatment_outside_school_funded %in% 1, "Outside School", "None"))))
+  
+# how to overlay x-axis to have barplot with multiple groups???????? NOT WORKING! How do I rearrange the variables to facet_wrap??
+diag1 <- test %>%
+ggplot(aes(x = diag_location, y = count())) +
+  geom_bar()
+
+treatment1 <- test %>% 
+  ggplot(aes(x = treatment_location, y = count())) +
+  geom_bar() 
+
+#WHY IS THIS GRAPH NOT SHOWING U
+test_graph <- grid.newpage() %>% 
+grid.draw(rbind(ggplotGrob(diag1), ggplotGrob(treatment1)))
+
+```
+
