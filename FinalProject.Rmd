@@ -8,10 +8,12 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+install.packages("caTools")
 # data from ssocs came in the .sas7bdat format. this library is used to read in the data
 library(sas7bdat)
 library(ggplot2)
 library(grid)
+library(caTools)
 library(tidyverse)
 ```
 
@@ -84,7 +86,7 @@ school_characteristics_vis <- school_characteristics %>%
   scale_fill_discrete(name = "Type of School") +
   theme(plot.caption = element_text(hjust = 0, face = "italic"))
 
-school_characteristics_vis
+saveRDS(school_characteristics_vis, "FinalProject/school_characteristics_vis.rds")
 
 # Liz thinks I should do a drop down menu of different questions I can answer with my regressions: 1) diagnostics; 2) providing interventions (focusing on the capacity to do so here); 3) what is this doing to school culture? 
 
@@ -106,7 +108,12 @@ school_diag_outcome <- school_characteristics %>%
          treatment_at_school_employed, treatmeant_at_school_funded, treatment_outside_school_funded)
 
 school_diag_outcome[school_diag_outcome == 2] <- 0
-  
+
+school_mental_health <- cbind(SCHID =school_characteristics$SCHID,school_type = school_characteristics$school_type, school_diag_outcome)  
+
+
+
+
 test <- school_diag_outcome %>% 
   mutate(diag_location = ifelse(diag_at_school_employed %in% 1, "By School Employee",
                                      ifelse(diag_at_school_funded %in% 1, "By School Contractor",
@@ -115,6 +122,11 @@ test <- school_diag_outcome %>%
                                      ifelse(treatmeant_at_school_funded %in% 1, "By School Contractor",
                                             ifelse(treatment_outside_school_funded %in% 1, "Outside School", "None"))))
   
+school_mental_health <- cbind(SCHID =school_characteristics$SCHID,school_type = school_characteristics$school_type, test)  
+
+rr <- ggplot(data = school_mental_health)+geom_bar(aes(x = school_type, fill = diag_location))
+
+
 # how to overlay x-axis to have barplot with multiple groups???????? NOT WORKING! How do I rearrange the variables to facet_wrap??
 diag1 <- test %>%
 ggplot(aes(x = diag_location, y = count())) +
@@ -124,9 +136,23 @@ treatment1 <- test %>%
   ggplot(aes(x = treatment_location, y = count())) +
   geom_bar() 
 
-#WHY IS THIS GRAPH NOT SHOWING U
+#WHY IS THIS GRAPH NOT SHOWING UP\
 test_graph <- grid.newpage() %>% 
 grid.draw(rbind(ggplotGrob(diag1), ggplotGrob(treatment1)))
+
+
+school_characteristics_vis <- school_characteristics %>% 
+  ggplot(aes(factor(x = school_pop, level = c("small", "medium", "large", "very large")))) + 
+  geom_bar(aes(fill = school_type)) + 
+  labs(title ="Characteristics of Schools Represented in the 2016 School Survey on Crime and Safety", 
+       subtitle = "Small: <300 | Medium: 300-499 | Large: 500-999 | Very Large: 1000+", 
+       caption = "Data from the Nationa; Center on Education Statistics, 2019",
+       x = "School Size",
+       y = "Number of Schools") +
+  scale_fill_discrete(name = "Type of School") +
+  theme(plot.caption = element_text(hjust = 0, face = "italic"))
+
+
 
 ```
 
