@@ -1,5 +1,5 @@
 ---
-title: "milestone6"
+title: "Making the Case for School Based Mental Health Services"
 author: "Prachi Naik"
 date: "10/29/2019"
 output: html_document
@@ -8,12 +8,25 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-install.packages("caTools")
-# data from ssocs came in the .sas7bdat format. this library is used to read in the data
+# install.packages("caTools")
+# # data from ssocs came in the .sas7bdat format. this library is used to read in the data
+# 
+# install.packages("corrplot")
+# install.packages("Hmisc")
+# install.packages("sjPlot")
+# install.packages("stargazer")
+
 library(sas7bdat)
 library(ggplot2)
 library(grid)
 library(caTools)
+library(corrplot)
+library("Hmisc")
+library(ggridges)
+library(broom)
+library(gt)
+library(sjPlot)
+library(stargazer)
 library(tidyverse)
 ```
 
@@ -55,7 +68,7 @@ survey_data <- ssocs_data %>%
 
 ```
 
-There were `r nrow()` schools that participated in this survey. The schools are situated all over the country, in contexts ranging from rural agrarian communities to bustling urban centers. 
+There were `r nrow(survey_data)` schools that participated in this survey. The schools are situated all over the country, in contexts ranging from rural agrarian communities to bustling urban centers. 
 
 ```{r}
 
@@ -74,6 +87,24 @@ school_characteristics <- survey_data %>%
                                             ifelse(location_density %in% c(113,123,133,143,213,223,233,243,313,323,333,343,423,433,443), "town",
                                                    ifelse(location_density %in% c(114,124,134,144,214,224,234,244,314,324,334,344,424,434,444), "rural", "na")))))
 
+#making a basic bar graph to show types of schools represented in sample 
+schooltypes <- school_characteristics %>% 
+  ggplot(aes(x = school_type)) + 
+  geom_bar(aes(y = (..count..)/sum(..count..))) +
+  labs(title ="Initial Breakdown of School Types Represented in the Survey", 
+       caption = "Data from the Nationa; Center on Education Statistics, 2019",
+       x = "Type of School",
+       y = "Percentage of Sample") +
+  scale_y_continuous(labels = scales::percent) +
+  coord_flip()
+
+schooltypes
+
+#shiny set up
+saveRDS(schooltypes, "App/schooltypes.rds")
+
+#Comparatively speaking, in 2016, there were 24.6% secondary schools, 68.4% primary schools, and 6.9% combined schools in the US public education system. 
+
 #making a basic stacked bar graph to put in the generalized "visualizations" tab
 school_characteristics_vis <- school_characteristics %>% 
   ggplot(aes(factor(x = school_pop, level = c("small", "medium", "large", "very large")))) + 
@@ -86,23 +117,25 @@ school_characteristics_vis <- school_characteristics %>%
   scale_fill_discrete(name = "Type of School") +
   theme(plot.caption = element_text(hjust = 0, face = "italic"))
 
-saveRDS(school_characteristics_vis, "FinalProject/school_characteristics_vis.rds")
+school_characteristics_vis
+
+#shiny set up 
+saveRDS(school_characteristics_vis, "App/school_characteristics_vis.rds")
 
 # Liz thinks I should do a drop down menu of different questions I can answer with my regressions: 1) diagnostics; 2) providing interventions (focusing on the capacity to do so here); 3) what is this doing to school culture? 
 
 ```
 
-Diagnostic Assessments 
+Diagnostic Assessments of Mental Health 
 
 ```{r}
-
 # Big Questions to Answer
 # Does additional diagnostic --> treatment? 
 # What might be inhibiting treatment? (tons of variables on impediments to mental health services)
 # If treatment is provided, what is its impact on school climate? 
 
-#If a school employee does a diagnostic, does that result in more treatments?
 
+# Is the form of diagnostic connected to the form of treatment?
 school_diag_outcome <- school_characteristics %>% 
   select(diag_at_school_employed, diag_at_school_funded, diag_outside_school_funded,
          treatment_at_school_employed, treatmeant_at_school_funded, treatment_outside_school_funded)
@@ -111,9 +144,31 @@ school_diag_outcome[school_diag_outcome == 2] <- 0
 
 school_mental_health <- cbind(SCHID =school_characteristics$SCHID,school_type = school_characteristics$school_type, school_diag_outcome)  
 
+# make a correlogram here
+diagmatrix <- cor(school_diag_outcome)
+round(diagmatrix, 2)
+
+colnames(diagmatrix) <- c("Diagnostic by School Employee", "Diagnostic by Nonemployee at School", "Diagnostic Outside School", "Treatment by School Employee", "Treatment by Nonemployee at School", "Treatment Outside School") 
+
+rownames(diagmatrix)<- c("Diagnostic by School Employee", "Diagnostic by Nonemployee at School", "Diagnostic Outside School", "Treatment by School Employee", "Treatment by Nonemployee at School", "Treatment Outside School")
+
+diagcorrelogram <- corrplot(diagmatrix, method = "color") 
+
+#prep for shiny
+saveRDS(diagcorrelogram, "App/diagcorrelogram.rds")
+
+
+#The correlogram above shows that the form of diagnostic is highly correlated with the type of ensuing treatment. 
+
+# Insights: looks like type of diagnostic drives the type of treatment provided. Let's explore 
+```
 
 
 
+
+```{r}
+
+# I made a mistake with coding variables here. You can have multiple types of diagnostics at the same school!! How to address this?!
 test <- school_diag_outcome %>% 
   mutate(diag_location = ifelse(diag_at_school_employed %in% 1, "By School Employee",
                                      ifelse(diag_at_school_funded %in% 1, "By School Contractor",
@@ -124,34 +179,115 @@ test <- school_diag_outcome %>%
   
 school_mental_health <- cbind(SCHID =school_characteristics$SCHID,school_type = school_characteristics$school_type, test)  
 
-rr <- ggplot(data = school_mental_health)+geom_bar(aes(x = school_type, fill = diag_location))
+diag_conducted_by <- ggplot(data = school_mental_health)+geom_bar(aes(x = school_type, fill = diag_location))
+
+diag_conducted_by
+
+# prep for shiny
+saveRDS(diag_conducted_by, "App/diag_conducted_by.rds")
+
+#keep this "diag_conducted_by" graph to show that high schools have slightly more diagnostics done by school employees. A whole slew of analyses should be born out by this.
+
+# question: what is the general profile of the schools that DO vs DONT provide diagnostic assessments?
+
+diagprofile <- cbind(ELL = survey_data$percent_students_limited_english_proficient, SpEd = survey_data$percent_special_education, bottomfifteen = survey_data$percent_students_below_15th_percentile, collegebound = survey_data$percent_student_likely_to_go_to_college, schoolmatters = survey_data$percent_students_academic_achievement_important, school_mental_health)  
+
+#create a new column (diag provided) to see if diags are provided through the school AT ALL
+diagprofile2 <- diagprofile %>% 
+  mutate(diagprovided = ifelse(diag_at_school_employed %in% 1, 1,
+                               ifelse(diag_at_school_funded %in% 1, 1,
+                                      ifelse(diag_outside_school_funded %in% 1, 1, 0))))
+
+#now graph types of diagnostics given school profile. How to get all variables on the same x-axis? turn them into a categorical variable? How!!! list colums? Ask if this is even necessary! Right now, doing a different graph for each characteristic
+
+# English Language Learners
+diagprovidedgraph_ELL <- diagprofile2 %>% 
+  ggplot(aes(x= ELL, y = diag_location)) + geom_density_ridges()
+
+diagprovidedgraph_ELL
+
+# shiny prep
+saveRDS(diagprovidedgraph_ELL, "App/diagprovidedgraph_ELL.rds")
+
+# Special Education
+diagprovidedgraph_SpEd <- diagprofile2 %>% 
+  ggplot(aes(x= SpEd, y = diag_location)) + geom_density_ridges()
+
+diagprovidedgraph_SpEd
+
+# shiny prep
+saveRDS(diagprovidedgraph_SpEd, "App/diagprovidedgraph_SpEd.rds")
+
+# Students in Bottom 15 Percentile
+diagprovidedgraph_bfif <- diagprofile2 %>% 
+  ggplot(aes(x= bottomfifteen, y = diag_location)) + geom_density_ridges()
+
+diagprovidedgraph_bfif
+
+# shiny prep
+saveRDS(diagprovidedgraph_bfif, "App/diagprovidedgraph_bfif.rds")
+
+# College Bound Student Population
+diagprovidedgraph_cb <- diagprofile2 %>% 
+  ggplot(aes(x= collegebound, y = diag_location)) + geom_density_ridges()
+
+diagprovidedgraph_cb
+
+# shiny prep
+saveRDS(diagprovidedgraph_cb, "App/diagprovidedgraph_cb.rds")
+
+# Percentage of Student Body for whom Academic Achievement is Important
+diagprovidedgraph_sm <- diagprofile2 %>% 
+  ggplot(aes(x= schoolmatters, y = diag_location)) + geom_density_ridges()
+
+diagprovidedgraph_sm
+
+# shiny prep
+saveRDS(diagprovidedgraph_sm, "App/diagprovidedgraph_sm.rds")
+
+```
 
 
-# how to overlay x-axis to have barplot with multiple groups???????? NOT WORKING! How do I rearrange the variables to facet_wrap??
-diag1 <- test %>%
-ggplot(aes(x = diag_location, y = count())) +
-  geom_bar()
 
-treatment1 <- test %>% 
-  ggplot(aes(x = treatment_location, y = count())) +
-  geom_bar() 
+```{r}
+#What might be preventing diagnostic assessments of mental health? 
 
-#WHY IS THIS GRAPH NOT SHOWING UP\
-test_graph <- grid.newpage() %>% 
-grid.draw(rbind(ggplotGrob(diag1), ggplotGrob(treatment1)))
+limitations <- survey_data %>% 
+  select(inadequate_access_to_mhp, inadequate_funding, potential_legal_issues, lack_of_parental_support, lack_of_community_support, payment_policies, reluctance_to_label_students)
+
+#recode values but be careful not to recode what you've recoded! (Hence the 4s and 5s). So now, 0 = "does not limit"; 1 = "limits in a minor way"; 2 = "limits in a major way." Recall in diagprovided, 0 = no diag provided, 1= some type of diag provided
+limitations[limitations == 3] <- 0
+limitations[limitations == 2] <- 4
+limitations[limitations == 1] <- 5
+limitations[limitations == 4] <- 1
+limitations[limitations == 5] <- 2
+
+diagprofile3 <-cbind(inadequate_access_to_mhp = limitations$inadequate_access_to_mhp, inadequate_funding = limitations$inadequate_funding, potential_legal_issues = limitations$potential_legal_issues, lack_of_parental_support = limitations$lack_of_parental_support, lack_of_community_support = limitations$lack_of_community_support, payment_policies = limitations$payment_policies, reluctance_to_label_students = limitations$reluctance_to_label_students, diagprofile2) 
 
 
-school_characteristics_vis <- school_characteristics %>% 
-  ggplot(aes(factor(x = school_pop, level = c("small", "medium", "large", "very large")))) + 
-  geom_bar(aes(fill = school_type)) + 
-  labs(title ="Characteristics of Schools Represented in the 2016 School Survey on Crime and Safety", 
-       subtitle = "Small: <300 | Medium: 300-499 | Large: 500-999 | Very Large: 1000+", 
-       caption = "Data from the Nationa; Center on Education Statistics, 2019",
-       x = "School Size",
-       y = "Number of Schools") +
-  scale_fill_discrete(name = "Type of School") +
-  theme(plot.caption = element_text(hjust = 0, face = "italic"))
+#Regress inadequate access to mhp on diagprovided 
+limitationsdiag <- glm(data = diagprofile3, diagprovided ~ inadequate_access_to_mhp + inadequate_funding + potential_legal_issues + lack_of_parental_support + lack_of_community_support + payment_policies +reluctance_to_label_students, family = "binomial")
 
+
+stargazer(access_to_mhp_reg, type="html", out = "access_to_mhp_reg.html")
+
+# interpretation of regression summary: as inadequate access to mhp increases, providing diagnostics decreases by 0.37.  
+
+access_to_mhp_regplot <- diagprofile3 %>% 
+  ggplot(aes(x= inadequate_access_to_mhp, y = diagprovided)) +
+  geom_jitter(color = 'black',
+             alpha = 0.25) +
+  geom_smooth(method=glm, color = 'blue')
+
+# Interpretation: consider taking this graph out! density of points is something worth exploring?
+
+
+
+
+
+
+
+  
 
 
 ```
