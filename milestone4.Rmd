@@ -1,0 +1,45 @@
+---
+title: "Milestone 3"
+author: "Prachi Naik"
+date: "10/4/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(gt)
+library(readxl)
+library(janitor)
+
+```
+
+
+```{r}
+
+# read in data from 2015-2016 Crime and Safety Data Survey
+data <- read_xlsx("NCES_CrimeandSafety_15to16.xlsx", 
+                  sheet = NULL, 
+                  range = "A4:A100", 
+                  col_names = TRUE,
+                  col_types = NULL,
+                  na = "", 
+                  trim_ws = TRUE, 
+                  skip = 0,
+                  progress = readxl_progress(), .name_repair = "unique")
+
+```
+
+My final project will be exploring the need for school-based mental health services in augmenting students' socioemotional learning and development. I will be using the following two sources of data:
+
+1) The 2015-2016 School Survey on Crime and Safety
+The survey data and codebook can be found at:
+https://nces.ed.gov/surveys/ssocs/data_products.asp
+
+2) 2019 Report on School Choice in the United States
+The report materials can be found at:
+https://nces.ed.gov/pubsearch/pubsinfo.asp?pubid=2019106
+
+The National Center for Education Statistics provides a wealth of data sets for me to use, should these two not suffice. I plan to use this data to demonstrate the correlation between increased mental health services and socially desirable behavior. The link between academic performance and mental health services is not as clear through these data sets, but I will have to do some more digging through footnotes to uncover that information. I will keep my analysis oriented towards national trends, hoping to show how families are actively choosing education options that serve the "whole" child. 
+

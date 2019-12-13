@@ -1,0 +1,160 @@
+---
+title: 'Making the Case for School-Based Mental Health Services: An Analysis of the
+  2016 School Survey on Crime and Safety'
+author: "Prachi Naik"
+date: "12/13/2019"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      error = FALSE,
+                      warning = FALSE)
+
+library(sas7bdat)
+library(shinythemes)
+library(ggplot2)
+library(grid)
+library(caTools)
+library(corrplot)
+library("Hmisc")
+library(ggridges)
+library(broom)
+library(gt)
+library(sjPlot)
+library(stargazer)
+library(RColorBrewer)
+library(tinytex)
+library(tidyverse)
+
+school_characteristics <- read_rds("school_characteristics.rds")
+school_diag_outcome <- read_rds("school_diag_outcome.rds")
+school_mental_health <- read_rds("school_mental_health.rds")
+test2 <- read_rds("test2.rds")
+diagprofile <- read_rds("diagprofile.rds")
+popcharacteristics <- read_rds("popcharacteristics.rds")
+diagprofile2 <- read_rds("diagprofile2.rds")
+limitations <- read_rds("limitations.rds")
+diagprofile3 <- read_rds("diagprofile3.rds")
+treatmentprofile4 <- read_rds("treatmentprofile4.rds")
+impact1 <- read_rds("impact1.rds")
+impact2 <- read_rds("impact2.rds")
+
+# A.2 Now read in graphs/ analytical objects
+
+schooltypes <- read_rds("schooltypes.rds")
+school_characteristics_vis <- read_rds("school_characteristics_vis.rds")
+diagcorrelogram <- read_rds("diagcorrelogram.rds")
+diag_conducted_by2 <- read_rds("diag_conducted_by2.rds") #NECESSARY?
+
+diagprovidedgraph_ELL <- read_rds("diagprovidedgraph_ELL.rds")
+diagprovidedgraph_bfif <- read_rds("diagprovidedgraph_bfif.rds")
+diagprovidedgraph_cb <- read_rds("diagprovidedgraph_cb.rds")
+diagprovidedgraph_sm <- read_rds("diagprovidedgraph_sm.rds")
+diagprovidedgraph_SpEd <- read_rds("diagprovidedgraph_SpEd.rds")
+
+
+```
+
+## <br> I. Problem statement </br>
+
+Violence and intergenerational poverty continue to plague America’s youth underserved youth of color, impacting their academic achievement, socioemotional development, and general well-being. Major urban areas like the City of Chicago present a particularly dire picture of this reality, where an estimated 81% of public school students have experienced at least one Adverse Childhood Experience (ACE) before the age of 18. The more ACEs a child is exposed to, the greater her risk for trauma. The link between the incidence of trauma and the educational opportunity gap is well-researched and documented. Untreated trauma not only impairs students’ ability to succeed academically, but has long-term negative impacts on brain development, emotional well-being, and behavioral stability. It is also a gateway for a host of debilitating mental health disorders in adulthood, with long-term impacts at the community level. The need for school-based mental health services is loud and clear-- but are schools themselves responding to this call for action? This project seeks to explore the availability and effectiveness of models of mental health delivery that are integrated into a variety of school systems. 
+
+I explore three overarching questions:
+
+1. What are the most effective methods and models to capture student need for services?
+
+2. What schools characteristics are most conducive to providing diagnostic services?
+
+3. Does an expanded menu of diagnostic assessment translate to the greater availability of services?
+
+## <br>II. Data sources</br>
+
+All of the data for this project came from the National Center for Education Statistics' 2016-2017 administration of the School Survey on Crime and Safety (SSOCS), disseminated in conjunction with the U.S. Department of Education and the U.S. Census Bureau. 
+
+## <br>III. Data cleaning</br>
+
+The SSOCS questionnaire asks principals to report on a variety of topics related to crime and safety, including:
+ 
+- School Practices and Programs,
+- Parent and Community Involvement at School,
+- School Security Staff,
+- School Mental Health Services,
+- Staff Training and Practices,
+- Limitations on Crime Prevention,
+- Incidents,
+- Disciplinary problems and disciplinary actions, and
+- Other school characteristics related to school crime
+
+This particular administration of the SSOCS contained responses from school officials at 2,092 schools primary, middle, high, and combined schools across the country. Of the hundreds of questions posed, this report selected those most closely pertaining to the provision of school-based mental health services and student population characteristics. The responses to most questions about the factual provision of mental health services (diagnostic-based and treatment-based) were coded as "Yes/No" questions, while other perception-based responses to questions on the characteristics of the student body were coded on a three or four part continuum. The combination of both these factors made specific impact analysis challenging. This will be discussed further in the Analysis section. 
+
+For all the schools represented in the survey, there were no missing or incomplete responses. 
+
+## <br>IV. Key assumptions</br>
+
+- All school officials responded truthfully to every question and, if probed, could present evidence to support their responses.
+
+- A "yes" response from school officials means the services are meaningfully provided.
+
+- The SSOCS is the leading nationally representative survey on school mental health, and as such, constitutes some of the leading current data on school mental health statistics. 
+
+## <br>V. Key definitions</br>
+
+- Diagnostic Assessment: A diagnostic assessment is a written report that documents the clinical and functional face-to-face evaluation of a recipient’s mental health. The report must include the recipient’s:
+
+• Nature, severity and impact of behavioral difficulties
+• Functional impairment
+• Subjective distress
+• Strengths and resources
+
+A diagnostic assessment is necessary to determine a recipient’s eligibility for mental health services.
+
+- Treatmeant: Community mental health literature defines school-initiated mental health services as “any program, intervention, or strategy applied in a school setting that was specifically designed to influence students' emotional, behavioral, and/or social needs." These interventions can be provided through the school, but do not always take place at school. Treatments are diverse and tailored for the needs of the individual student. 
+
+- English Language Learners: Students who have been identified as "ELLs" are not yet considered proficient in the reading, writing, speaking, and listening of Academic English, adjusted for their grade-level. 
+
+- Special Education: This is the form of learning provided to students with exceptional needs, such as students with learning disabilities, mental challenges, or socioemotional needs.
+
+## <br>VI. Key take-aways</br>
+
+#### 1. Conclusions on the Analysis and Nature of the Survey
+
+1. Due to the nature of the survey, it was extremely challenging to draw meaningful conclusions about the availability or efficacy of mental health services. Within a "Yes/No" format, it is impossible to parse out the extent of services. For instance, a school could answer that all types of diagnostic and treatment services are available to students, but in practice, these services might be extremely difficult for a majority of the student body to access. it is not enough to merely know whether a school is providing services; the quality and accessibility of those services is crucial to any discussion of impact. Throughout the majority of analysis borne out in this project, this essential component was necessarily missing, thus compromising the applicability of the findings. 
+
+2. Though highly prone to omitted variable bias, there is a statistically significant indication that inadequate access to a mental health professional, inadequate funding, and payment policies are associated with a decrease in a school's capacity to provide either diagnostic services or mental health treatment. These points are all fairly self-evident, but are nonetheless borne out by the results of the survey. It is interesting to note, however, that schools' willingness or capability to provide services for a child persists despite an associated lack of parental support. On the one hand, this points to a hopeful corrective capacity within the education system to advocate for a child's needs. On the other hand, this could also be interpreted as paternalistic of the school to have the additional provision of services associated with lack of family support, which could be problematic and not always in the best interests of the child at hand.
+
+```{r r, fig.width= 12, fig.height = 5}
+
+#Regress inadequate access to mhp on diagprovided 
+limitationsdiag <- glm(data = diagprofile3, diagprovided ~ inadequate_access_to_mhp + inadequate_funding + potential_legal_issues + lack_of_parental_support + lack_of_community_support + payment_policies +reluctance_to_label_students, family = "binomial")
+
+stargazer(limitationsdiag,  type="html", out = "limitationsdiag.html")
+
+#create a treatmentprovided (yes or no)
+treatmentprofile4 <- diagprofile3 %>% 
+  mutate(treatmentprovided = ifelse(treatment_at_school_employed %in% 1, 1,
+                               ifelse(treatment_at_school_funded %in% 1, 1,
+                                      ifelse(treatment_outside_school_funded %in% 1, 1, 0))))
+
+limitationstreatment <- glm(data = treatmentprofile4, treatmentprovided ~ inadequate_access_to_mhp + inadequate_funding + potential_legal_issues + lack_of_parental_support + lack_of_community_support + payment_policies + reluctance_to_label_students, family = "binomial")
+
+
+#combined diag and treatment regression models 
+stargazer(limitationsdiag, limitationstreatment,  type="html", out = "limitationscombined2.html")
+```
+
+3. Since the information collected is not longitudinal in terms of time or treatment, it is impossible to isolate the true impact of diagnostic or treatment services upon school climate or culture. Adding survey data from previous years would not have addressed this issue as different schools participate in the survey every year. The series of density graphs created throughout this study show that the characteristics of schools providing services are not essentially different from those schools that provide no services. However, among those schools that do provide services, those that do so through school employees perform slightly better on distributional indications of school climate and culture. More than anything, this fundamental disconnect points to the need for more nationally funded longitudinal surveys of the impact of mental health services on the aggregated school level. Though the analysis of this project does not provide meaningful evidence to support the idea that school-based mental health should be invested in, it also does not discount the need for better quality data to properly excavate the research goals inspiring this project. 
+
+```{r, fig.width= 12, fig.height = 5}
+impact_discipline2 <- impact2 %>% 
+  ggplot(aes(x= total_disciplinary_actions, y = ..count.., fill = treatment_type)) + 
+  geom_density(alpha = 0.2) +
+  scale_x_log10()+
+  facet_grid(treatment_type ~ .)
+
+impact_discipline2
+```
+

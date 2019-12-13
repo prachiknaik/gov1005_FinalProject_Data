@@ -1,0 +1,12 @@
+name: school_mentalhealth
+title: school_mentalhealth
+username:
+account: prachiknaik
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1560921
+bundleId: 2666225
+url: https://prachiknaik.shinyapps.io/school_mentalhealth/
+when: 1576272119.91355
+asMultiple: FALSE
+asStatic: FALSE
